@@ -1,0 +1,2 @@
+ - name: Ensure ara is restarted
+   command: /usr/sbin/service ara restart

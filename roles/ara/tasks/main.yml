@@ -1,0 +1,36 @@
+- name: Ensure required packages are present
+  package: name="{{ item }}" state=present
+  with_items:
+    - py27-pip
+    - py27-sqlite3
+
+- name: Ensure ara is installed via pip
+  pip: name="{{ item }}"
+  with_items:
+    - ara
+
+- name: Ensure ara init script is present
+  copy:
+    src: ../files/ara-rc-d
+    dest: /usr/local/etc/rc.d/ara
+    owner: root
+    group: wheel
+    mode: 0555 
+  notify: 
+    - Ensure ara is restarted
+
+- name: Ensure ara service is enabled
+  service:
+    name: ara
+    enabled: yes
+  notify: 
+    - Ensure ara is restarted
+
+# Ansible bug. Starting services with service module is borked.
+# - name: Ensure ara service is started
+#  service:
+#    name: ara
+#    state: started
+
+- name: Ensure ara is started
+  command: /usr/sbin/service ara start

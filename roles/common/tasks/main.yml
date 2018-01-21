@@ -1,0 +1,7 @@
+- name: Ensure basic packages are present
+  package: name="{{ item }}" state=present
+  with_items:
+    - zsh
+    - tmux
+    - vim
+    - git

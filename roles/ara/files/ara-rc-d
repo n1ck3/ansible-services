@@ -1,0 +1,65 @@
+#!/bin/sh
+ 
+# PROVIDE: ara
+ 
+. /etc/rc.subr
+ 
+name="ara"
+rcvar=`set_rcvar`
+
+load_rc_config $name
+
+extra_commands="status"
+start_cmd="${name}_start"
+stop_cmd="${name}_stop"
+restart_cmd="${name}_restart"
+status_cmd="${name}_status"
+pidfile=/var/run/${name}.pid
+supervisor_pidfile=/var/run/${name}_supervisor.pid
+ara_dir="/mnt/ansible/ara"
+
+ara_start()
+{
+  if [ -f ${pidfile} ]; then
+    echo "ara is already running."
+  else
+    echo "Starting ara."
+    export ara_location="${ara_dir}"
+    export ARA_HOST="0.0.0.0"
+    export ARA_PORT="80"
+    export ARA_DIR="${ara_dir}"
+    export ARA_DATABASE="sqlite:///${ara_dir}/ansible.sqlite"
+    export ARA_LOGFILE="${ara_dir}/ara.log"
+    daemon -P ${supervisor_pidfile} -p ${pidfile} -r /usr/local/bin/ara-manage runserver &> /dev/null
+  fi
+}
+
+ara_stop()
+{
+  if [ -f ${supervisor_pidfile} ]; then
+    echo "Stopping ara."
+    SUPERVISOR_PID=`cat ${supervisor_pidfile}`
+    kill ${SUPERVISOR_PID}
+  else
+    echo "ara is not running."
+  fi
+}
+
+ara_restart()
+{
+  ara_stop
+  ara_start
+}
+
+ara_status()
+{
+  if [ -f ${supervisor_pidfile} ]; then
+    PID=`cat ${pidfile}`
+    SUPERVISOR_PID=`cat ${supervisor_pidfile}`
+    echo "ara is running as pid ${PID}, supervised by daemon with pid ${SUPERVISOR_PID}."
+  else
+    echo "ara is not running."
+  fi
+}
+
+run_rc_command "$1"
